@@ -713,7 +713,11 @@ function handleFile(file) {
 }
 
 fileInput.addEventListener('change', (e) => { if (e.target.files[0]) handleFile(e.target.files[0]); });
-dropZone.addEventListener('click', () => fileInput.click());
+dropZone.addEventListener('click', (e) => {
+  // Don't double-trigger if clicking the label or input directly
+  if (e.target.closest('label') || e.target === fileInput) return;
+  fileInput.click();
+});
 
 dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
 dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
