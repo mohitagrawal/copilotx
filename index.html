@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SpendView — Visualize Your Spending</title>
-<meta name="description" content="Upload your transaction CSV and instantly see interactive Sankey diagrams, YoY trends, and category breakdowns. 100% client-side, your data never leaves your browser.">
+<title>CopilotX — Advanced Insights for Copilot Money</title>
+<meta name="description" content="The missing analytics layer for Copilot Money. Interactive Sankey diagrams, YoY trends, and deep category breakdowns — 100% client-side, your data never leaves your browser.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
 <link rel="stylesheet" href="style.css">
 <script src="https://d3js.org/d3.v7.min.js"></script>
@@ -16,39 +16,176 @@
 
 <!-- ════════════════ UPLOAD VIEW ════════════════ -->
 <div id="uploadView" class="view active">
-  <div class="upload-page">
-    <div class="upload-hero">
-      <div class="upload-badge">100% client-side · your data never leaves your browser</div>
-      <h1>Spend<span>View</span></h1>
-      <p class="upload-subtitle">Drop your transaction CSV and instantly get interactive dashboards, Sankey diagrams, and year-over-year trend analysis.</p>
+  <div class="landing">
 
-      <div class="upload-zone" id="dropZone">
-        <div class="upload-zone-inner">
-          <div class="upload-icon">
-            <svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="6" y="10" width="36" height="28" rx="4" stroke="currentColor" stroke-width="2.5"/><path d="M24 20v12M18 26l6-6 6 6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <!-- ── Hero Section ── -->
+    <section class="l-hero">
+      <div class="l-hero-content">
+        <div class="l-eyebrow">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 1v6H2l6 8V9h6L8 1z" fill="currentColor"/></svg>
+          The missing analytics layer for Copilot Money
+        </div>
+        <h1 class="l-title">Copilot<span>X</span></h1>
+        <p class="l-subtitle">Copilot Money tracks your spending. CopilotX lets you <em>understand</em> it — with interactive Sankey diagrams, year-over-year trend analysis, and deep category breakdowns.</p>
+
+        <div class="l-upload-zone" id="dropZone">
+          <div class="upload-zone-inner">
+            <div class="l-upload-icon">
+              <svg width="36" height="36" viewBox="0 0 36 36" fill="none"><path d="M18 6v16m-6-6l6-6 6 6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 22v6a2 2 0 002 2h20a2 2 0 002-2v-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+            </div>
+            <div class="l-upload-label">Drop your Copilot Money CSV export</div>
+            <label class="l-upload-btn">
+              Choose File
+              <input type="file" id="fileInput" accept=".csv" hidden>
+            </label>
           </div>
-          <div class="upload-text">Drag & drop your CSV here</div>
-          <div class="upload-or">or</div>
-          <label class="upload-btn">
-            Browse Files
-            <input type="file" id="fileInput" accept=".csv" hidden>
-          </label>
+        </div>
+        <div class="upload-error" id="uploadError"></div>
+        <button class="l-demo-btn" id="demoBtn">or try with sample data</button>
+      </div>
+
+      <!-- Decorative Sankey preview -->
+      <div class="l-hero-visual">
+        <svg class="l-sankey-preview" viewBox="0 0 400 360" fill="none" aria-hidden="true">
+          <path d="M40,30 C180,30 160,40 280,40" stroke="#b08d57" stroke-width="48" stroke-opacity="0.15"/>
+          <path d="M40,80 C180,80 160,100 280,100" stroke="#7ab08d" stroke-width="32" stroke-opacity="0.15"/>
+          <path d="M40,120 C180,120 160,150 280,150" stroke="#5e9cc7" stroke-width="24" stroke-opacity="0.15"/>
+          <path d="M40,155 C180,155 160,195 280,195" stroke="#c7855e" stroke-width="22" stroke-opacity="0.15"/>
+          <path d="M40,185 C180,185 160,230 280,230" stroke="#8b7ec8" stroke-width="16" stroke-opacity="0.15"/>
+          <path d="M40,205 C180,205 160,260 280,260" stroke="#c75e8a" stroke-width="12" stroke-opacity="0.15"/>
+          <path d="M40,220 C180,220 160,285 280,285" stroke="#6b8fa3" stroke-width="10" stroke-opacity="0.15"/>
+          <path d="M40,235 C180,235 160,310 280,310" stroke="#8ec75e" stroke-width="8" stroke-opacity="0.15"/>
+          <!-- Animated highlight -->
+          <path class="l-sankey-glow" d="M40,80 C180,80 160,100 280,100" stroke="#7ab08d" stroke-width="32" stroke-opacity="0"/>
+          <rect x="24" y="10" width="12" height="240" rx="4" fill="#e07a3a" opacity="0.6"/>
+          <rect x="284" y="24" width="10" height="32" rx="3" fill="#b08d57" opacity="0.5"/>
+          <rect x="284" y="88" width="10" height="24" rx="3" fill="#7ab08d" opacity="0.5"/>
+          <rect x="284" y="142" width="10" height="18" rx="3" fill="#5e9cc7" opacity="0.5"/>
+          <rect x="284" y="188" width="10" height="16" rx="3" fill="#c7855e" opacity="0.5"/>
+          <rect x="284" y="224" width="10" height="14" rx="3" fill="#8b7ec8" opacity="0.5"/>
+          <rect x="284" y="254" width="10" height="12" rx="3" fill="#c75e8a" opacity="0.5"/>
+          <rect x="284" y="280" width="10" height="10" rx="3" fill="#6b8fa3" opacity="0.5"/>
+          <rect x="284" y="306" width="10" height="8" rx="3" fill="#8ec75e" opacity="0.5"/>
+          <!-- Labels -->
+          <text x="302" y="45" fill="#5c5549" font-size="11" font-family="DM Sans">Housing</text>
+          <text x="302" y="105" fill="#5c5549" font-size="11" font-family="DM Sans">Childcare</text>
+          <text x="302" y="155" fill="#5c5549" font-size="11" font-family="DM Sans">Travel</text>
+          <text x="302" y="200" fill="#5c5549" font-size="11" font-family="DM Sans">Food</text>
+          <text x="302" y="235" fill="#5c5549" font-size="11" font-family="DM Sans">Random</text>
+          <text x="302" y="264" fill="#5c5549" font-size="10" font-family="DM Sans">Shopping</text>
+          <text x="302" y="289" fill="#5c5549" font-size="10" font-family="DM Sans">Transport</text>
+          <text x="302" y="314" fill="#5c5549" font-size="10" font-family="DM Sans">Wellness</text>
+        </svg>
+      </div>
+    </section>
+
+    <!-- ── Privacy Section ── -->
+    <section class="l-privacy">
+      <div class="l-privacy-inner">
+        <div class="l-privacy-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M12 2L3 7v5c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-9-5z" stroke="currentColor" stroke-width="1.8"/><path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <h2 class="l-privacy-title">Your financial data never leaves your browser.</h2>
+        <p class="l-privacy-text">CopilotX runs entirely client-side. Your CSV is parsed in JavaScript on your machine — nothing is uploaded, stored, or transmitted to any server. No cookies. No analytics. No tracking pixels.</p>
+        <div class="l-trust-row">
+          <div class="l-trust-item">
+            <div class="l-trust-icon">
+              <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><rect x="2" y="2" width="16" height="16" rx="3" stroke="currentColor" stroke-width="1.5"/><path d="M6 10h8M10 6v8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            </div>
+            <div>
+              <strong>Zero backend</strong>
+              <span>No servers, databases, or APIs. Pure HTML, CSS, JS.</span>
+            </div>
+          </div>
+          <div class="l-trust-item">
+            <div class="l-trust-icon">
+              <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="1.5"/><path d="M10 6v4l3 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            </div>
+            <div>
+              <strong>Ephemeral</strong>
+              <span>Close the tab, your data is gone. Nothing persists.</span>
+            </div>
+          </div>
+          <div class="l-trust-item">
+            <div class="l-trust-icon">
+              <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M3 10a7 7 0 0114 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M7 14l3-4 3 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <div>
+              <strong>Open source</strong>
+              <span>Read every line. <a href="https://github.com/mohitagrawal/copilotx" target="_blank" rel="noopener">View on GitHub</a></span>
+            </div>
+          </div>
         </div>
       </div>
+    </section>
 
-      <div class="upload-error" id="uploadError"></div>
-
-      <div class="upload-format">
-        <div class="format-title">Expected CSV columns</div>
-        <code>date, name, amount, status, category, parent category, excluded, tags, type, account, account mask, note, recurring</code>
-        <div class="format-hint">Works with <a href="https://copilot.money" target="_blank" rel="noopener">Copilot Money</a> exports out of the box. Other formats coming soon.</div>
+    <!-- ── Features Section ── -->
+    <section class="l-features">
+      <div class="l-section-label">What you get</div>
+      <div class="l-features-grid">
+        <div class="l-feature">
+          <div class="l-feature-num">01</div>
+          <h3>Sankey Money Flow</h3>
+          <p>See exactly where your money goes — from total spend through categories into every subcategory. Click any flow to drill into individual transactions.</p>
+        </div>
+        <div class="l-feature">
+          <div class="l-feature-num">02</div>
+          <h3>Year-over-Year Trends</h3>
+          <p>Compare spending across years. Spot which categories are growing, which are shrinking, and monthly patterns overlaid across years.</p>
+        </div>
+        <div class="l-feature">
+          <div class="l-feature-num">03</div>
+          <h3>Category Deep Dives</h3>
+          <p>Donut charts, ranked lists, and subcategory bar breakdowns. Switch between any year instantly to compare how your spending evolves.</p>
+        </div>
+        <div class="l-feature">
+          <div class="l-feature-num">04</div>
+          <h3>Transaction Detail</h3>
+          <p>Click any category, subcategory, or Sankey flow to see every transaction behind the number — date, merchant, and amount in a searchable modal.</p>
+        </div>
       </div>
+    </section>
 
-      <button class="demo-btn" id="demoBtn">Try with sample data →</button>
-    </div>
+    <!-- ── How it works ── -->
+    <section class="l-how">
+      <div class="l-section-label">How it works</div>
+      <div class="l-steps">
+        <div class="l-step">
+          <div class="l-step-num">1</div>
+          <div>
+            <strong>Export from Copilot Money</strong>
+            <p>Settings → Export Data → Download CSV</p>
+          </div>
+        </div>
+        <div class="l-step-arrow">→</div>
+        <div class="l-step">
+          <div class="l-step-num">2</div>
+          <div>
+            <strong>Drop it here</strong>
+            <p>Drag your CSV onto this page</p>
+          </div>
+        </div>
+        <div class="l-step-arrow">→</div>
+        <div class="l-step">
+          <div class="l-step-num">3</div>
+          <div>
+            <strong>Explore your data</strong>
+            <p>Dashboards render instantly in your browser</p>
+          </div>
+        </div>
+      </div>
+    </section>
 
-    <footer class="upload-footer">
-      <span>Built with care · <a href="https://github.com" target="_blank" rel="noopener">Open Source</a></span>
+    <!-- ── Footer ── -->
+    <footer class="l-footer">
+      <div class="l-footer-inner">
+        <span class="l-footer-brand">Copilot<span>X</span></span>
+        <span class="l-footer-links">
+          <a href="https://github.com/mohitagrawal/copilotx" target="_blank" rel="noopener">GitHub</a>
+          <span class="l-footer-sep">·</span>
+          <a href="https://copilot.money" target="_blank" rel="noopener">Copilot Money</a>
+        </span>
+      </div>
     </footer>
   </div>
 </div>
@@ -58,7 +195,7 @@
   <div class="container">
     <!-- Nav -->
     <nav id="mainNav">
-      <a href="#" class="logo" onclick="showView('dashView');return false;">Spend<span>View</span></a>
+      <a href="#" class="logo" onclick="showView('dashView');return false;">Copilot<span>X</span></a>
       <ul class="nav-links">
         <li><a href="#" class="active" data-tab="overview">Overview</a></li>
         <li><a href="#" data-tab="sankey">Sankey</a></li>
