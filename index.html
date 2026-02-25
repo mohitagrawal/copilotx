@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SpendView — Visualize Your Spending</title>
+<meta name="description" content="Upload your transaction CSV and instantly see interactive Sankey diagrams, YoY trends, and category breakdowns. 100% client-side, your data never leaves your browser.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
+<link rel="stylesheet" href="style.css">
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<script src="https://unpkg.com/d3-sankey@0.12.3/dist/d3-sankey.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+</head>
+<body>
+
+<!-- ════════════════ UPLOAD VIEW ════════════════ -->
+<div id="uploadView" class="view active">
+  <div class="upload-page">
+    <div class="upload-hero">
+      <div class="upload-badge">100% client-side · your data never leaves your browser</div>
+      <h1>Spend<span>View</span></h1>
+      <p class="upload-subtitle">Drop your transaction CSV and instantly get interactive dashboards, Sankey diagrams, and year-over-year trend analysis.</p>
+
+      <div class="upload-zone" id="dropZone">
+        <div class="upload-zone-inner">
+          <div class="upload-icon">
+            <svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="6" y="10" width="36" height="28" rx="4" stroke="currentColor" stroke-width="2.5"/><path d="M24 20v12M18 26l6-6 6 6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <div class="upload-text">Drag & drop your CSV here</div>
+          <div class="upload-or">or</div>
+          <label class="upload-btn">
+            Browse Files
+            <input type="file" id="fileInput" accept=".csv" hidden>
+          </label>
+        </div>
+      </div>
+
+      <div class="upload-error" id="uploadError"></div>
+
+      <div class="upload-format">
+        <div class="format-title">Expected CSV columns</div>
+        <code>date, name, amount, status, category, parent category, excluded, tags, type, account, account mask, note, recurring</code>
+        <div class="format-hint">Works with <a href="https://copilot.money" target="_blank" rel="noopener">Copilot Money</a> exports out of the box. Other formats coming soon.</div>
+      </div>
+
+      <button class="demo-btn" id="demoBtn">Try with sample data →</button>
+    </div>
+
+    <footer class="upload-footer">
+      <span>Built with care · <a href="https://github.com" target="_blank" rel="noopener">Open Source</a></span>
+    </footer>
+  </div>
+</div>
+
+<!-- ════════════════ DASHBOARD VIEW ════════════════ -->
+<div id="dashView" class="view">
+  <div class="container">
+    <!-- Nav -->
+    <nav id="mainNav">
+      <a href="#" class="logo" onclick="showView('dashView');return false;">Spend<span>View</span></a>
+      <ul class="nav-links">
+        <li><a href="#" class="active" data-tab="overview">Overview</a></li>
+        <li><a href="#" data-tab="sankey">Sankey</a></li>
+        <li><a href="#" data-tab="trends">Trends</a></li>
+      </ul>
+      <button class="new-upload-btn" id="newUploadBtn">↑ New File</button>
+    </nav>
+
+    <!-- ──── OVERVIEW TAB ──── -->
+    <div id="tab-overview" class="tab-content active">
+      <div class="page-header">
+        <h1>Overview <span class="year-accent" id="ovTitleYear"></span></h1>
+        <div class="year-selector" id="ovYearSelector"></div>
+      </div>
+      <div class="summary-grid" id="ovSummaryGrid"></div>
+      <div class="panel">
+        <div class="panel-header">
+          <div class="section-title">Monthly Spending</div>
+          <a href="#" class="quick-link" onclick="switchTab('sankey');return false;">View Sankey →</a>
+        </div>
+        <div class="chart-wrap-md"><canvas id="ovMonthlyChart"></canvas></div>
+      </div>
+      <div class="grid-2">
+        <div class="panel">
+          <div class="section-title" style="margin-bottom:1rem">Category Split</div>
+          <div class="chart-wrap-md"><canvas id="ovDonutChart"></canvas></div>
+        </div>
+        <div class="panel">
+          <div class="section-title" style="margin-bottom:0.6rem">By Category</div>
+          <ul class="cat-list" id="ovCatList"></ul>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="section-title" style="margin-bottom:1rem">Subcategory Breakdown</div>
+        <div id="ovSubcatSection"></div>
+      </div>
+    </div>
+
+    <!-- ──── SANKEY TAB ──── -->
+    <div id="tab-sankey" class="tab-content">
+      <div class="page-header">
+        <h1>Money Flow <span class="year-accent" id="skTitleYear"></span></h1>
+        <div class="year-selector" id="skYearSelector"></div>
+      </div>
+      <div class="panel">
+        <div class="legend-row" id="skLegend"></div>
+        <div class="sankey-container" id="skSankeyWrap"></div>
+        <div class="sankey-hint"><span>Hover</span> to highlight flows · <span>Click</span> to see transactions</div>
+      </div>
+    </div>
+
+    <!-- ──── TRENDS TAB ──── -->
+    <div id="tab-trends" class="tab-content">
+      <div class="page-header">
+        <h1>Year-over-Year Trends</h1>
+      </div>
+      <div class="insight-cards" id="trInsights"></div>
+      <div class="panel">
+        <div class="section-title">Annual Spend</div>
+        <div class="chart-wrap-lg"><canvas id="trAnnualChart"></canvas></div>
+      </div>
+      <div class="panel">
+        <div class="section-title">Category Comparison by Year</div>
+        <div style="overflow-x:auto"><table class="yoy-table" id="trYoyTable"></table></div>
+      </div>
+      <div class="section-title" style="margin-bottom:1.2rem">Category Trends</div>
+      <div class="cat-grid" id="trCatGrid"></div>
+      <div class="panel">
+        <div class="section-title">Monthly Patterns (Recent Years)</div>
+        <div class="chart-wrap-lg"><canvas id="trMonthlyOverlay"></canvas></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════ TOOLTIP ════════════════ -->
+<div class="sankey-tooltip" id="tooltip">
+  <div class="tt-label" id="ttLabel"></div>
+  <div class="tt-value" id="ttValue"></div>
+  <div class="tt-detail" id="ttDetail"></div>
+</div>
+
+<!-- ════════════════ MODAL ════════════════ -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-head">
+      <div>
+        <h3 id="modalTitle">Transactions</h3>
+        <div class="modal-total" id="modalTotal"></div>
+      </div>
+      <button class="modal-close" id="modalClose">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
