@@ -48,6 +48,10 @@ Push to `main` and Vercel auto-deploys. Or deploy manually:
 npx vercel --prod
 ```
 
+## Disclaimer
+
+CopilotX is an independent, community-built project. It is **not affiliated with, endorsed by, or officially connected to [Copilot Money](https://copilot.money)** in any way. "Copilot Money" is a trademark of its respective owner.
+
 ## License
 
 MIT
