@@ -319,7 +319,7 @@ body::after {
 .l-features {
   max-width: 1100px;
   margin: 0 auto;
-  padding: 5rem 3rem;
+  padding: 4.5rem 3rem;
 }
 .l-section-label {
   font-size: 0.68rem;
@@ -327,43 +327,38 @@ body::after {
   text-transform: uppercase;
   letter-spacing: 0.14em;
   color: var(--text-muted);
-  margin-bottom: 2rem;
+  margin-bottom: 2.5rem;
 }
 .l-features-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1.5rem;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2.5rem;
 }
 .l-feature {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 1.8rem;
-  transition: transform 0.2s, box-shadow 0.2s;
+  padding: 0;
 }
-.l-feature:hover {
-  transform: translateY(-3px);
-  box-shadow: var(--shadow);
-}
-.l-feature-num {
-  font-size: 0.68rem;
-  font-weight: 700;
+.l-feature-icon-wrap {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--accent-bg);
   color: var(--accent);
-  letter-spacing: 0.05em;
-  margin-bottom: 0.7rem;
-  font-variant-numeric: tabular-nums;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.1rem;
 }
 .l-feature h3 {
   font-family: var(--serif);
-  font-size: 1.15rem;
+  font-size: 1.08rem;
   font-weight: 500;
   margin-bottom: 0.5rem;
   color: var(--text);
 }
 .l-feature p {
-  font-size: 0.84rem;
-  line-height: 1.6;
-  color: var(--text-secondary);
+  font-size: 0.82rem;
+  line-height: 1.65;
+  color: var(--text-muted);
 }
 
 /* ── How it works ── */
@@ -374,36 +369,32 @@ body::after {
 }
 .l-steps {
   display: flex;
-  align-items: flex-start;
-  gap: 1rem;
+  align-items: center;
+  gap: 0;
 }
 .l-step {
   flex: 1;
-  display: flex;
-  gap: 0.8rem;
-  align-items: flex-start;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 1.4rem;
+  text-align: center;
+  padding: 0 1.5rem;
 }
 .l-step-num {
-  flex-shrink: 0;
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   background: var(--accent);
   color: white;
-  font-size: 0.82rem;
+  font-size: 0.85rem;
   font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
+  margin: 0 auto 0.8rem;
 }
 .l-step strong {
   display: block;
   font-size: 0.88rem;
-  margin-bottom: 0.2rem;
+  margin-bottom: 0.25rem;
+  color: var(--text);
 }
 .l-step p {
   font-size: 0.78rem;
@@ -411,12 +402,12 @@ body::after {
   line-height: 1.5;
   margin: 0;
 }
-.l-step-arrow {
+.l-step-divider {
   flex-shrink: 0;
-  align-self: center;
-  font-size: 1.2rem;
-  color: var(--text-muted);
-  padding-top: 0.5rem;
+  width: 48px;
+  height: 1px;
+  background: var(--border-strong);
+  margin-top: -1.2rem;
 }
 
 /* ── Footer ── */
@@ -468,13 +459,16 @@ body::after {
   }
   .l-hero-visual { order: -1; }
   .l-title { font-size: 3rem; }
-  .l-features-grid { grid-template-columns: 1fr; }
+  .l-features-grid { grid-template-columns: repeat(2, 1fr); gap: 2rem; }
   .l-trust-row { grid-template-columns: 1fr; gap: 1rem; }
-  .l-steps { flex-direction: column; }
-  .l-step-arrow { transform: rotate(90deg); align-self: center; }
+  .l-steps { flex-direction: column; gap: 0.5rem; }
+  .l-step-divider { width: 1px; height: 32px; margin-top: 0; }
   .l-features, .l-how { padding-left: 1.5rem; padding-right: 1.5rem; }
   .l-privacy { padding: 3rem 1.5rem; }
   .l-footer { padding: 1.5rem; }
+}
+@media (max-width: 600px) {
+  .l-features-grid { grid-template-columns: 1fr; }
 }
 @media (max-width: 500px) {
   .l-title { font-size: 2.5rem; }
