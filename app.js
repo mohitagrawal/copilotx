@@ -22,6 +22,7 @@ let CAT_ORDER = [];     // sorted parent categories
 let COLORS = {};        // cat -> color
 let YEARS = [];
 let currentYear = '';
+let currentSankeyMonth = 'all'; // 'all' or '01'..'12'
 
 // Chart instances
 let ovMonthlyChart, ovDonutChart;
@@ -228,18 +229,24 @@ document.getElementById('modalClose').addEventListener('click', () => overlay.cl
 overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('open'); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') overlay.classList.remove('open'); });
 
-function openModal(title, parentCat, subCat) {
-  const yearTxns = TXN_DATA[currentYear] || {};
+function openModal(title, parentCat, subCat, opts) {
+  const year = (opts && opts.year) || currentYear;
+  const month = (opts && opts.month) || null;
+  const yearTxns = TXN_DATA[year] || {};
   let txns = [];
 
   if (!parentCat && !subCat) {
-    // All transactions
     Object.values(yearTxns).forEach(cats => Object.values(cats).forEach(arr => txns.push(...arr)));
   } else if (subCat && parentCat) {
     txns = (yearTxns[parentCat] && yearTxns[parentCat][subCat]) || [];
   } else if (parentCat) {
     const catTxns = yearTxns[parentCat] || {};
     Object.values(catTxns).forEach(arr => txns.push(...arr));
+  }
+
+  // Filter by month if specified
+  if (month && month !== 'all') {
+    txns = txns.filter(t => t.d.slice(5, 7) === month);
   }
 
   txns.sort((a, b) => b.d.localeCompare(a.d));
@@ -379,16 +386,78 @@ function renderOverview() {
 // ═══════════════════════════════════════
 //  SANKEY TAB
 // ═══════════════════════════════════════
-function renderSankey() {
-  const d = DATA[currentYear];
-  if (!d) return;
 
-  document.getElementById('skTitleYear').textContent = "'" + currentYear.slice(2);
+// Build month-filtered aggregation from TXN_DATA
+function getSankeyData(year, month) {
+  if (month === 'all') return DATA[year];
+  const yearTxns = TXN_DATA[year] || {};
+  const result = { total: 0, txns: 0, categories: {}, subcategories: {} };
+  const mm = month; // '01'..'12'
+  for (const [parentCat, subs] of Object.entries(yearTxns)) {
+    for (const [subCat, txns] of Object.entries(subs)) {
+      const filtered = txns.filter(t => t.d.slice(5, 7) === mm);
+      if (filtered.length === 0) continue;
+      const sum = filtered.reduce((s, t) => s + t.a, 0);
+      result.total += sum;
+      result.txns += filtered.length;
+      result.categories[parentCat] = (result.categories[parentCat] || 0) + sum;
+      if (!result.subcategories[parentCat]) result.subcategories[parentCat] = {};
+      result.subcategories[parentCat][subCat] = (result.subcategories[parentCat][subCat] || 0) + sum;
+    }
+  }
+  // Round
+  result.total = Math.round(result.total * 100) / 100;
+  for (const c of Object.keys(result.categories)) result.categories[c] = Math.round(result.categories[c] * 100) / 100;
+  for (const c of Object.keys(result.subcategories)) {
+    for (const s of Object.keys(result.subcategories[c])) result.subcategories[c][s] = Math.round(result.subcategories[c][s] * 100) / 100;
+  }
+  return result;
+}
+
+function buildMonthSelector() {
+  const el = document.getElementById('skMonthSelector');
+  el.innerHTML = '';
+  // "Full Year" button
+  const allBtn = document.createElement('button');
+  allBtn.textContent = 'Full Year';
+  allBtn.dataset.month = 'all';
+  if (currentSankeyMonth === 'all') allBtn.classList.add('active');
+  allBtn.onclick = () => { currentSankeyMonth = 'all'; updateMonthSelector(); renderSankey(); };
+  el.appendChild(allBtn);
+  // Individual month buttons — only show months that have data
+  const yd = DATA[currentYear];
+  MONTH_NAMES.forEach((name, i) => {
+    const mm = String(i + 1).padStart(2, '0');
+    if (!yd || !yd.monthly[mm]) return;
+    const btn = document.createElement('button');
+    btn.textContent = name;
+    btn.dataset.month = mm;
+    if (currentSankeyMonth === mm) btn.classList.add('active');
+    btn.onclick = () => { currentSankeyMonth = mm; updateMonthSelector(); renderSankey(); };
+    el.appendChild(btn);
+  });
+}
+
+function updateMonthSelector() {
+  document.querySelectorAll('#skMonthSelector button').forEach(b => {
+    b.classList.toggle('active', b.dataset.month === currentSankeyMonth);
+  });
+}
+
+function renderSankey() {
+  const d = getSankeyData(currentYear, currentSankeyMonth);
+  if (!d || d.total === 0) {
+    document.getElementById('skSankeyWrap').innerHTML = '<div style="text-align:center;padding:3rem;color:var(--text-muted)">No data for this period</div>';
+    return;
+  }
+
+  const monthLabel = currentSankeyMonth === 'all' ? '' : ' ' + MONTH_NAMES[parseInt(currentSankeyMonth) - 1];
+  document.getElementById('skTitleYear').textContent = "'" + currentYear.slice(2) + monthLabel;
 
   // Legend
   const legend = document.getElementById('skLegend');
   legend.innerHTML = CAT_ORDER.filter(c => (d.categories[c] || 0) > 0).map(cat =>
-    `<div class="legend-item" onclick="openModal('${cat.replace(/'/g,"\\'")}','${cat.replace(/'/g,"\\'")}',null)"><span class="legend-dot" style="background:${COLORS[cat]}"></span>${escHtml(cat)}</div>`
+    `<div class="legend-item" onclick="openModal('${cat.replace(/'/g,"\\'")}','${cat.replace(/'/g,"\\'")}',null,{month:currentSankeyMonth})"><span class="legend-dot" style="background:${COLORS[cat]}"></span>${escHtml(cat)}</div>`
   ).join('');
 
   // Build sankey
@@ -421,7 +490,7 @@ function renderSankey() {
   cats.forEach(cat => {
     const subs = d.subcategories[cat];
     if (!subs) return;
-    Object.entries(subs).forEach(([sub, val]) => links.push({ source: nodeMap[cat], target: nodeMap['sub__' + cat + '__' + sub], value: val }));
+    Object.entries(subs).sort((a, b) => b[1] - a[1]).forEach(([sub, val]) => links.push({ source: nodeMap[cat], target: nodeMap['sub__' + cat + '__' + sub], value: val }));
   });
 
   const svg = d3.select(wrap).append('svg')
@@ -432,6 +501,8 @@ function renderSankey() {
   const sankey = d3.sankey()
     .nodeId(d => d.index).nodeWidth(16).nodePadding(7)
     .nodeAlign(d3.sankeyLeft)
+    .nodeSort(null)
+    .linkSort(null)
     .extent([[50, 16], [width - 180, height - 16]]);
 
   const graph = sankey({ nodes: nodes.map(d => ({ ...d })), links: links.map(d => ({ ...d })) });
@@ -483,31 +554,87 @@ function renderSankey() {
       nodeEls.classed('dimmed', n => !rel.has(n.index));
       linkEls.classed('dimmed', l => !rel.has(l.source.index) || !rel.has(l.target.index));
       linkEls.classed('highlighted', l => rel.has(l.source.index) && rel.has(l.target.index));
-      const pct = ((d.value / DATA[currentYear].total) * 100).toFixed(1);
+      const pct = ((d.value / getSankeyData(currentYear, currentSankeyMonth).total) * 100).toFixed(1);
       showTooltip(e, d.name, fmt(d.value), `${pct}% of total · Click to view transactions`);
     })
     .on('mousemove', (e) => positionTooltip(e))
     .on('mouseleave', () => { nodeEls.classed('dimmed', false); linkEls.classed('dimmed', false).classed('highlighted', false); hideTooltip(); })
     .on('click', (e, d) => {
       const m = nodeMeta[d.index];
-      if (m.type === 'parent') openModal(m.cat, m.cat, null);
-      else if (m.type === 'sub') openModal(`${m.cat} → ${m.sub}`, m.cat, m.sub);
-      else openModal('All Transactions', null, null);
+      const mo = {month: currentSankeyMonth};
+      if (m.type === 'parent') openModal(m.cat, m.cat, null, mo);
+      else if (m.type === 'sub') openModal(`${m.cat} → ${m.sub}`, m.cat, m.sub, mo);
+      else openModal('All Transactions', null, null, mo);
     });
 
   linkEls
     .on('mouseenter', function(e, d) {
       linkEls.classed('dimmed', l => l !== d);
       d3.select(this).classed('dimmed', false).classed('highlighted', true);
-      showTooltip(e, `${d.source.name} → ${d.target.name}`, fmt(d.value), `${((d.value / DATA[currentYear].total) * 100).toFixed(1)}% of total · Click to view`);
+      showTooltip(e, `${d.source.name} → ${d.target.name}`, fmt(d.value), `${((d.value / getSankeyData(currentYear, currentSankeyMonth).total) * 100).toFixed(1)}% of total · Click to view`);
     })
     .on('mousemove', (e) => positionTooltip(e))
     .on('mouseleave', () => { linkEls.classed('dimmed', false).classed('highlighted', false); hideTooltip(); })
     .on('click', (e, d) => {
       const tm = nodeMeta[d.target.index];
-      if (tm.type === 'sub') openModal(`${tm.cat} → ${tm.sub}`, tm.cat, tm.sub);
-      else if (tm.type === 'parent') openModal(tm.cat, tm.cat, null);
+      const mo = {month: currentSankeyMonth};
+      if (tm.type === 'sub') openModal(`${tm.cat} → ${tm.sub}`, tm.cat, tm.sub, mo);
+      else if (tm.type === 'parent') openModal(tm.cat, tm.cat, null, mo);
     });
+}
+
+// ── Category trend cards (yearly vs total) ──
+function renderCatTrendCards(fullYears, latestYear, mode) {
+  trCatCharts.forEach(c => c.destroy());
+  trCatCharts = [];
+  const grid = document.getElementById('trCatGrid');
+  grid.innerHTML = '';
+
+  CAT_ORDER.forEach(cat => {
+    const vals = fullYears.map(y => DATA[y].categories[cat] || 0);
+    if (Math.max(...vals) < 100) return;
+
+    let displayVals, labels, headerHtml;
+
+    if (mode === 'total') {
+      // Cumulative running total
+      let running = 0;
+      displayVals = vals.map(v => { running += v; return running; });
+      labels = fullYears;
+      const total = displayVals[displayVals.length - 1];
+      headerHtml = `<div class="tc-header"><div><div class="tc-cat"><span class="tc-dot" style="background:${COLORS[cat]}"></span>${escHtml(cat)}</div><div class="tc-amount">${fmt(total)} <span style="font-size:0.65rem;color:var(--text-muted)">all time</span></div></div></div>`;
+    } else {
+      displayVals = vals;
+      labels = fullYears;
+      const cur = vals[vals.length - 1];
+      const prev = vals[vals.length - 2] || 0;
+      const pct = prev > 0 ? ((cur - prev) / prev * 100) : 0;
+      const dir = pct >= 0 ? 'up' : 'down';
+      headerHtml = `<div class="tc-header"><div><div class="tc-cat"><span class="tc-dot" style="background:${COLORS[cat]}"></span>${escHtml(cat)}</div><div class="tc-amount">${fmt(cur)} <span style="font-size:0.65rem;color:var(--text-muted)">in ${latestYear}</span></div></div><span class="tc-change ${dir}">${dir === 'up' ? '↑' : '↓'} ${Math.abs(pct).toFixed(0)}%</span></div>`;
+    }
+
+    const card = document.createElement('div');
+    card.className = 'trend-card';
+    card.innerHTML = `${headerHtml}<div class="chart-wrap-sm"><canvas></canvas></div>`;
+    grid.appendChild(card);
+
+    const ch = new Chart(card.querySelector('canvas').getContext('2d'), {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{ data: displayVals, borderColor: COLORS[cat], backgroundColor: COLORS[cat] + '15', fill: true, tension: 0.35, pointRadius: 4, pointHoverRadius: 7, pointBackgroundColor: COLORS[cat], pointBorderColor: '#fff', pointBorderWidth: 2, borderWidth: 2.5 }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: { ...chartTooltip, callbacks: { label: ctx => fmt(ctx.parsed.y) } } },
+        scales: {
+          x: { grid: { display: false }, ticks: { color: '#9c9488', font: { family: 'DM Sans', size: 11 } }, border: { display: false } },
+          y: { grid: { color: 'rgba(0,0,0,0.03)' }, ticks: { color: '#9c9488', font: { family: 'DM Sans', size: 10 }, callback: v => fmtK(v) }, border: { display: false }, beginAtZero: mode !== 'total' }
+        }
+      }
+    });
+    trCatCharts.push(ch);
+  });
 }
 
 // ═══════════════════════════════════════
@@ -566,7 +693,7 @@ function renderTrends() {
     }
   });
 
-  // YoY table
+  // YoY table (clickable cells)
   const displayYears = fullYears.slice(-5);
   const table = document.getElementById('trYoyTable');
   let thtml = '<thead><tr><th>Category</th>';
@@ -574,15 +701,16 @@ function renderTrends() {
   thtml += `<th>${prevYear}→${latestYear}</th></tr></thead><tbody>`;
 
   thtml += `<tr style="font-weight:700"><td>Total</td>`;
-  displayYears.forEach(y => thtml += `<td class="highlight">${fmt(DATA[y].total)}</td>`);
+  displayYears.forEach(y => thtml += `<td class="highlight yoy-cell" data-year="${y}" data-cat="">${fmt(DATA[y].total)}</td>`);
   const tc = ((d.total - p.total) / p.total * 100);
   thtml += `<td><span class="change-badge ${tc >= 0 ? 'up' : 'down'}">${tc >= 0 ? '+' : ''}${tc.toFixed(1)}%</span></td></tr>`;
 
   CAT_ORDER.forEach(cat => {
     const hasData = displayYears.some(y => (DATA[y].categories[cat] || 0) > 0);
     if (!hasData) return;
-    thtml += `<tr><td><span class="dot" style="background:${COLORS[cat]};display:inline-block;width:8px;height:8px;border-radius:3px;margin-right:6px"></span>${escHtml(cat)}</td>`;
-    displayYears.forEach(y => { const v = DATA[y].categories[cat] || 0; thtml += `<td>${v > 0 ? fmtK(v) : '—'}</td>`; });
+    const eCat = escHtml(cat);
+    thtml += `<tr><td><span class="dot" style="background:${COLORS[cat]};display:inline-block;width:8px;height:8px;border-radius:3px;margin-right:6px"></span>${eCat}</td>`;
+    displayYears.forEach(y => { const v = DATA[y].categories[cat] || 0; thtml += `<td class="yoy-cell" data-year="${y}" data-cat="${eCat}">${v > 0 ? fmtK(v) : '—'}</td>`; });
     const cur = DATA[latestYear].categories[cat] || 0;
     const prv = DATA[prevYear].categories[cat] || 0;
     if (prv > 100 && cur > 0) { const pc = (cur - prv) / prv * 100; thtml += `<td><span class="change-badge ${pc >= 0 ? 'up' : 'down'}">${pc >= 0 ? '+' : ''}${pc.toFixed(0)}%</span></td>`; }
@@ -592,43 +720,29 @@ function renderTrends() {
   thtml += '</tbody>';
   table.innerHTML = thtml;
 
-  // Category sparklines
-  trCatCharts.forEach(c => c.destroy());
-  trCatCharts = [];
-  const grid = document.getElementById('trCatGrid');
-  grid.innerHTML = '';
-
-  CAT_ORDER.forEach(cat => {
-    const vals = fullYears.map(y => DATA[y].categories[cat] || 0);
-    if (Math.max(...vals) < 100) return;
-    const cur = vals[vals.length - 1];
-    const prev = vals[vals.length - 2] || 0;
-    const pct = prev > 0 ? ((cur - prev) / prev * 100) : 0;
-    const dir = pct >= 0 ? 'up' : 'down';
-
-    const card = document.createElement('div');
-    card.className = 'trend-card';
-    card.innerHTML = `
-      <div class="tc-header"><div><div class="tc-cat"><span class="tc-dot" style="background:${COLORS[cat]}"></span>${escHtml(cat)}</div><div class="tc-amount">${fmt(cur)} <span style="font-size:0.65rem;color:var(--text-muted)">in ${latestYear}</span></div></div><span class="tc-change ${dir}">${dir === 'up' ? '↑' : '↓'} ${Math.abs(pct).toFixed(0)}%</span></div>
-      <div class="chart-wrap-sm"><canvas></canvas></div>`;
-    grid.appendChild(card);
-
-    const ch = new Chart(card.querySelector('canvas').getContext('2d'), {
-      type: 'line',
-      data: {
-        labels: fullYears,
-        datasets: [{ data: vals, borderColor: COLORS[cat], backgroundColor: COLORS[cat] + '15', fill: true, tension: 0.35, pointRadius: 4, pointHoverRadius: 7, pointBackgroundColor: COLORS[cat], pointBorderColor: '#fff', pointBorderWidth: 2, borderWidth: 2.5 }]
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { display: false }, tooltip: { ...chartTooltip, callbacks: { label: ctx => fmt(ctx.parsed.y) } } },
-        scales: {
-          x: { grid: { display: false }, ticks: { color: '#9c9488', font: { family: 'DM Sans', size: 11 } }, border: { display: false } },
-          y: { grid: { color: 'rgba(0,0,0,0.03)' }, ticks: { color: '#9c9488', font: { family: 'DM Sans', size: 10 }, callback: v => fmtK(v) }, border: { display: false }, beginAtZero: true }
-        }
+  // Make YoY cells clickable
+  table.querySelectorAll('.yoy-cell').forEach(cell => {
+    cell.addEventListener('click', () => {
+      const y = cell.dataset.year;
+      const cat = cell.dataset.cat;
+      if (cat) {
+        openModal(`${cat} in ${y}`, cat, null, { year: y });
+      } else {
+        openModal(`All Transactions in ${y}`, null, null, { year: y });
       }
     });
-    trCatCharts.push(ch);
+  });
+
+  // Category sparklines (supports 'yearly' and 'total' modes)
+  renderCatTrendCards(fullYears, latestYear, 'yearly');
+
+  // Toggle handler
+  document.querySelectorAll('#trendToggle .trend-toggle-btn').forEach(btn => {
+    btn.onclick = () => {
+      document.querySelectorAll('#trendToggle .trend-toggle-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderCatTrendCards(fullYears, latestYear, btn.dataset.mode);
+    };
   });
 
   // Monthly overlay
@@ -672,7 +786,8 @@ function renderTrends() {
 // ═══════════════════════════════════════
 function launchDashboard() {
   buildYearSelector('ovYearSelector', renderOverview);
-  buildYearSelector('skYearSelector', renderSankey);
+  buildYearSelector('skYearSelector', () => { currentSankeyMonth = 'all'; buildMonthSelector(); renderSankey(); });
+  buildMonthSelector();
   document.querySelectorAll('.year-accent').forEach(el => el.textContent = "'" + currentYear.slice(2));
 
   showView('dashView');

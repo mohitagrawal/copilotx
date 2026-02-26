@@ -925,6 +925,8 @@ nav {
 }
 .yoy-table tbody td:first-child { text-align: left; font-weight: 500; color: var(--text); }
 .yoy-table tbody tr:hover td { background: var(--accent-bg); }
+.yoy-cell { cursor: pointer; transition: color 0.15s; }
+.yoy-cell:hover { color: var(--accent) !important; text-decoration: underline; }
 .yoy-table .highlight { font-weight: 700; color: var(--text); }
 .change-badge {
   display: inline-block;
@@ -938,6 +940,34 @@ nav {
 .change-badge.up { background: var(--red-bg); color: var(--red); }
 .change-badge.down { background: var(--green-bg); color: var(--green); }
 .change-badge.na { background: var(--surface-alt); color: var(--text-muted); }
+
+/* Trend toggle */
+.trend-toggle {
+  display: flex;
+  gap: 0.25rem;
+  background: var(--surface-alt);
+  border-radius: 9px;
+  padding: 3px;
+}
+.trend-toggle-btn {
+  padding: 0.3rem 0.85rem;
+  font-size: 0.76rem;
+  font-weight: 500;
+  font-family: var(--sans);
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.trend-toggle-btn:hover { color: var(--text-secondary); }
+.trend-toggle-btn.active {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow-sm);
+  font-weight: 600;
+}
 
 /* ═══════════════════════════════════════
    ANIMATIONS

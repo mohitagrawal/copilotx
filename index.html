@@ -233,7 +233,10 @@
     <div id="tab-sankey" class="tab-content">
       <div class="page-header">
         <h1>Money Flow <span class="year-accent" id="skTitleYear"></span></h1>
-        <div class="year-selector" id="skYearSelector"></div>
+        <div style="display:flex;flex-direction:column;gap:0.5rem;align-items:flex-end">
+          <div class="year-selector" id="skYearSelector"></div>
+          <div class="year-selector" id="skMonthSelector"></div>
+        </div>
       </div>
       <div class="panel">
         <div class="legend-row" id="skLegend"></div>
@@ -256,7 +259,13 @@
         <div class="section-title">Category Comparison by Year</div>
         <div style="overflow-x:auto"><table class="yoy-table" id="trYoyTable"></table></div>
       </div>
-      <div class="section-title" style="margin-bottom:1.2rem">Category Trends</div>
+      <div class="panel-header" style="margin-bottom:1.2rem">
+        <div class="section-title">Category Trends</div>
+        <div class="trend-toggle" id="trendToggle">
+          <button class="trend-toggle-btn active" data-mode="yearly">Yearly</button>
+          <button class="trend-toggle-btn" data-mode="total">All-Time Total</button>
+        </div>
+      </div>
       <div class="cat-grid" id="trCatGrid"></div>
       <div class="panel">
         <div class="section-title">Monthly Patterns (Recent Years)</div>
