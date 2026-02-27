@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════
-//  CopilotX — Advanced insights for Copilot Money
+//  Copilot+ — Advanced insights for Copilot Money
 // ═══════════════════════════════════════
 
 const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];

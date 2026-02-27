@@ -1,4 +1,4 @@
-# CopilotX
+# Copilot+
 
 ## Project Overview
 

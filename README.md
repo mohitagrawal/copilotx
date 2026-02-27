@@ -1,4 +1,4 @@
-# CopilotX — Visualize Your Spending
+# Copilot+ — Visualize Your Spending
 
 Upload your transaction CSV and instantly get interactive dashboards, Sankey diagrams, and year-over-year trend analysis. 100% client-side — your data never leaves your browser.
 
@@ -50,7 +50,7 @@ npx vercel --prod
 
 ## Disclaimer
 
-CopilotX is an independent, community-built project. It is **not affiliated with, endorsed by, or officially connected to [Copilot Money](https://copilot.money)** in any way. "Copilot Money" is a trademark of its respective owner.
+Copilot+ is an independent, community-built project. It is **not affiliated with, endorsed by, or officially connected to [Copilot Money](https://copilot.money)** in any way. "Copilot Money" is a trademark of its respective owner.
 
 ## License
 
