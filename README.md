@@ -2,7 +2,7 @@
 
 Upload your transaction CSV and instantly get interactive dashboards, Sankey diagrams, and year-over-year trend analysis. 100% client-side — your data never leaves your browser.
 
-**Live at [copilotx.vercel.app](https://copilotx.vercel.app)**
+**Live at [copilotplus.vercel.app](https://copilotplus.vercel.app)**
 
 ## Features
 

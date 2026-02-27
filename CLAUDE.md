@@ -4,8 +4,8 @@
 
 Client-side expense visualization dashboard. Users upload a CSV of their transactions and get interactive dashboards — no backend, no data leaves the browser.
 
-Live at https://copilotx.vercel.app
-Repo: https://github.com/mohitagrawal/copilotx
+Live at https://copilotplus.vercel.app
+Repo: https://github.com/mohitagrawal/copilotplus
 
 ## Architecture
 
